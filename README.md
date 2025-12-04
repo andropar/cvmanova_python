@@ -189,17 +189,21 @@ Region 3, Contrast 1: D = 1.711423
 Region 3, Contrast 2: D = 0.241187
 ```
 
-**Python values (simplified preprocessing):**
+**Python values (SPM-compatible preprocessing):**
 ```
-Region 1, Contrast 1: D = 1.168399
-Region 1, Contrast 2: D = 0.251478
-Region 2, Contrast 1: D = 0.044688
-Region 2, Contrast 2: D = -0.002491
-Region 3, Contrast 1: D = 0.431727
-Region 3, Contrast 2: D = 0.044129
+Region 1, Contrast 1: D = 0.863689
+Region 1, Contrast 2: D = 0.158894
+Region 2, Contrast 1: D = 0.037253
+Region 2, Contrast 2: D = 0.005638
+Region 3, Contrast 1: D = 0.286785
+Region 3, Contrast 2: D = 0.032421
 ```
 
-Note: Values differ due to preprocessing differences (Python uses simplified preprocessing without motion correction). The **relative pattern is preserved** (Region 1 > Region 3 > Region 2) with **Spearman rho = 1.0** (perfect rank correlation).
+Note: Values differ from MATLAB due to motion correction algorithm differences:
+- Python uses center-of-mass based translation correction + 128s DCT high-pass filter + AR(1) whitening
+- MATLAB/SPM uses full 6-DOF rigid body realignment with sinc interpolation + 128s DCT high-pass filter + AR(1) whitening
+
+The **relative pattern is preserved** (Region 1 > Region 3 > Region 2) with **Spearman rho = 1.0** (perfect rank correlation).
 
 To run integration tests:
 ```bash

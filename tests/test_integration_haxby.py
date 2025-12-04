@@ -12,17 +12,21 @@ MATLAB expected values (with SPM12 r6685):
   Region 3, Contrast 1: D = 1.711423
   Region 3, Contrast 2: D = 0.241187
 
-Python expected values (simplified preprocessing):
-  Region 1, Contrast 1: D = 1.168399
-  Region 1, Contrast 2: D = 0.251478
-  Region 2, Contrast 1: D = 0.044688
-  Region 2, Contrast 2: D = -0.002491
-  Region 3, Contrast 1: D = 0.431727
-  Region 3, Contrast 2: D = 0.044129
+Python expected values (SPM-compatible preprocessing):
+  Region 1, Contrast 1: D = 0.863689
+  Region 1, Contrast 2: D = 0.158894
+  Region 2, Contrast 1: D = 0.037253
+  Region 2, Contrast 2: D = 0.005638
+  Region 3, Contrast 1: D = 0.286785
+  Region 3, Contrast 2: D = 0.032421
 
 Note: Python values differ from MATLAB due to preprocessing differences:
-- Python: Simple linear detrending + AR(1) whitening
-- MATLAB/SPM: Motion correction + 128s high-pass filter + AR(1) whitening
+- Python: Center-of-mass motion correction + 128s DCT high-pass + AR(1) whitening
+- MATLAB/SPM: Full 6-DOF rigid body realignment + 128s DCT high-pass + AR(1) whitening
+
+The main difference is the motion correction algorithm - SPM uses a sophisticated
+6-parameter rigid body transformation with sinc interpolation, while our Python
+implementation uses a simplified center-of-mass based translation correction.
 
 Spearman rank correlation between MATLAB and Python results: rho = 1.0 (perfect)
 This confirms the relative ordering is preserved despite absolute value differences.
@@ -48,14 +52,15 @@ EXPECTED_D_MATLAB = {
     (3, 2): 0.241187,
 }
 
-# Expected values from Python implementation (simplified preprocessing)
+# Expected values from Python implementation (SPM-compatible preprocessing)
+# Note: These differ from MATLAB mainly due to motion correction algorithm differences
 EXPECTED_D_PYTHON = {
-    (1, 1): 1.168399,
-    (1, 2): 0.251478,
-    (2, 1): 0.044688,
-    (2, 2): -0.002491,
-    (3, 1): 0.431727,
-    (3, 2): 0.044129,
+    (1, 1): 0.863689,
+    (1, 2): 0.158894,
+    (2, 1): 0.037253,
+    (2, 2): 0.005638,
+    (3, 1): 0.286785,
+    (3, 2): 0.032421,
 }
 
 
