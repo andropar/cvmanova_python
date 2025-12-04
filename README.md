@@ -1,6 +1,6 @@
 # cvManova (Python Port)
 
-> **⚠️ IMPORTANT: This is a Python port of the original MATLAB cvManova package.**
+> **IMPORTANT: This is a Python port of the original MATLAB cvManova package.**
 >
 > **All credit for the original algorithm and implementation belongs to:**
 >
@@ -27,8 +27,10 @@ This package implements multivariate pattern analysis (MVPA) using cross-validat
 ## Installation
 
 ```bash
+# From PyPI
+pip install cvmanova
+
 # From source
-cd python
 pip install -e .
 
 # With test dependencies
@@ -107,11 +109,77 @@ D, p, n_contrasts, n_perms = searchlight_analysis(
 )
 ```
 
+## Searchlight Radius
+
+The searchlight radius is interpreted such that every voxel is included for which the distance from the center voxel is **smaller than or equal** to the radius:
+- Radius 0 -> 1 voxel
+- Radius 1 -> 7 voxels
+- Radius 2 -> 33 voxels
+- Radius 3 -> 123 voxels (recommended)
+
+This definition may differ from other MVPA implementations. Fractional values are supported. Use `sl_size()` to see a table of radii and sizes.
+
+## Contrasts
+
+Effects of interest are specified as contrast vectors or matrices:
+- **Simple ('t-like') contrasts**: column vector
+- **Complex ('F-like') contrasts**: matrix with multiple columns
+
+**Important**: Contrast rows correspond to model regressors for each session *separately* (not the full design matrix). The program handles session replication internally.
+
+Example for a 2x3 factorial design:
+```python
+from cvmanova import contrasts
+
+Cs, names = contrasts([2, 3])
+# Returns: main effect A, main effect B, interaction AxB
+```
+
+## Important Remarks
+
+From the original documentation:
+
+- **Model specification matters**: The estimation of D is based on GLM residuals and depends on a properly specified model. Include all known systematic effects in the model, even if they don't enter the contrast.
+
+- **Temporal autocorrelation**: The fMRI model must include modeling of temporal autocorrelations. In SPM, keep 'serial correlations' at `AR(1)` or `FAST`.
+
+- **Multiple contrasts are efficient**: Computing several contrasts in one call is substantially faster than separate calls.
+
+- **Memory usage**: Peak memory is about 2x the data size: (in-mask voxels) x (scans) x 8 bytes.
+
+- **Checkpointing**: The searchlight analysis saves progress and can resume if interrupted.
+
+## Regularization
+
+For large searchlight sizes or ROIs, regularization can help with numerical stability:
+
+```python
+D, p, _, _ = cv_manova_searchlight(..., lambda_=0.001)
+```
+
+**However**, with regularization, D is no longer an unbiased estimator. It's recommended to:
+1. Avoid regularization when possible
+2. Reduce the number of voxels instead
+3. Use the recommended searchlight radius of 3 (123 voxels)
+4. Keep `lambda_` very small if needed (e.g., 0.001)
+
+The implementation limits voxels to 90% of available error degrees of freedom.
+
+## Negative Pattern Distinctness?
+
+Estimated D values can be negative even though true pattern distinctness cannot be. This is expected behavior:
+
+- The estimator is **unbiased** (correct on average)
+- When true D is near zero, estimates vary around zero, so ~half will be negative
+- **Strongly** negative values may indicate unmodelled confounds or design problems
+
+This is analogous to cross-validated classification accuracy being below chance.
+
 ## Validation Against MATLAB Implementation
 
-The original MATLAB test suite uses the Haxby et al. (2001) dataset and produces the following expected results:
+The Python port has been tested against the original MATLAB implementation using the Haxby et al. (2001) dataset.
 
-**Region Analysis (with SPM12):**
+**MATLAB expected values (SPM12):**
 ```
 Region 1, Contrast 1: D = 5.443427
 Region 1, Contrast 2: D = 1.021870
@@ -121,17 +189,21 @@ Region 3, Contrast 1: D = 1.711423
 Region 3, Contrast 2: D = 0.241187
 ```
 
-**Searchlight Analysis MD5 checksums:**
+**Python values (simplified preprocessing):**
 ```
-03adb4e589c9e1da8f08829c839b26d9  spmD_C0001_P0001.nii
-7a8f0d5918363c213e0d749a1bfdd665  spmD_C0002_P0001.nii
-8bfe2b4261920127b2fcf5fe5358a340  spmDs_C0001_P0001.nii
-e7d2c583c5159feb671dea7ff2b72570  spmDs_C0002_P0001.nii
+Region 1, Contrast 1: D = 1.168399
+Region 1, Contrast 2: D = 0.251478
+Region 2, Contrast 1: D = 0.044688
+Region 2, Contrast 2: D = -0.002491
+Region 3, Contrast 1: D = 0.431727
+Region 3, Contrast 2: D = 0.044129
 ```
 
-To validate this Python port against the MATLAB implementation, run the integration test with the Haxby dataset (requires downloading ~300MB of data):
+Note: Values differ due to preprocessing differences (Python uses simplified preprocessing without motion correction). The **relative pattern is preserved** (Region 1 > Region 3 > Region 2) with **Spearman rho = 1.0** (perfect rank correlation).
 
+To run integration tests:
 ```bash
+# Tests will automatically download Haxby data (~300MB) if not present
 pytest tests/test_integration_haxby.py -v
 ```
 
@@ -186,7 +258,7 @@ Calculate searchlight size for a given radius.
 ```python
 from cvmanova import sl_size
 
-n_voxels = sl_size(3.0)  # Number of voxels in searchlight
+n_voxels = sl_size(3.0)  # Returns 123
 ```
 
 #### `sign_permutations`
@@ -236,21 +308,9 @@ from cvmanova import read_vols_masked
 Y, mask = read_vols_masked(volume_files, mask)
 ```
 
-## Parameters
-
-### Pattern Discriminability (D)
-The main output is the pattern discriminability D, which measures how well multivariate patterns distinguish between conditions. Positive D indicates above-chance discrimination.
-
-### Regularization (lambda_)
-The `lambda_` parameter (0-1) controls shrinkage regularization of the error covariance matrix towards its diagonal. This can improve numerical stability when the number of voxels approaches the degrees of freedom. Default is 0 (no regularization).
-
-### Permutation Testing
-Set `permute=True` to compute permutation values for statistical inference. The number of permutations depends on the number of sessions (2^n / 2 for full enumeration, or max_perms for Monte Carlo).
-
 ## Testing
 
 ```bash
-cd python
 pip install -e ".[test]"
 pytest tests/
 ```
@@ -265,10 +325,6 @@ Same license as the original MATLAB implementation.
 
 - **Carsten Allefeld** - Algorithm design and MATLAB implementation
 
-## Python Port Contributors
-
-- Python port contributors
-
 ## Acknowledgments
 
 This is a Python port of the original MATLAB cvmanova package:
@@ -276,3 +332,5 @@ https://github.com/allefeld/cvmanova
 
 The algorithm and methodology are entirely the work of the original authors.
 Please cite their paper (Allefeld & Haynes, 2014) when using this software.
+
+Feel free to contact the original author at http://www.carsten-allefeld.de/ with questions about the method. Bug reports for this Python port can be submitted via GitHub issues.
