@@ -28,8 +28,17 @@ from .io import (
     write_image,
 )
 from .api import searchlight_analysis, region_analysis
+# Modern data structures (Phase 4)
+from .data import SessionData, DesignMatrix
+from .results import CvManovaResult
+# Configuration system (Phase 5)
+from .config import SearchlightConfig, RegionConfig, AnalysisConfig, ContrastSpec
+# Scikit-learn style estimators (Phase 6)
+from .estimators import SearchlightCvManova, RegionCvManova
+# Flexible data loaders (Phase 7)
+from .loaders import SPMLoader, NiftiLoader, NilearnMaskerLoader
 
-__version__ = "3.0.0"
+__version__ = "4.0.0"
 __author__ = "Carsten Allefeld"
 
 __all__ = [
@@ -39,6 +48,22 @@ __all__ = [
     "cv_manova_searchlight",
     "cv_manova_region",
     "run_searchlight",
+    # Modern data structures (Phase 4)
+    "SessionData",
+    "DesignMatrix",
+    "CvManovaResult",
+    # Configuration system (Phase 5)
+    "SearchlightConfig",
+    "RegionConfig",
+    "AnalysisConfig",
+    "ContrastSpec",
+    # Scikit-learn style estimators (Phase 6)
+    "SearchlightCvManova",
+    "RegionCvManova",
+    # Flexible data loaders (Phase 7)
+    "SPMLoader",
+    "NiftiLoader",
+    "NilearnMaskerLoader",
     # Utilities
     "contrasts",
     "sign_permutations",
