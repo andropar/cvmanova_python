@@ -13,6 +13,22 @@
 
 ---
 
+## At a glance
+
+This repository makes cross-validated MANOVA available as an installable Python
+package for fMRI multivariate pattern analysis. The port keeps the original
+methodology by Allefeld & Haynes (2014), while adding Python-native workflows
+for searchlight and ROI analyses.
+
+What this Python port provides:
+
+- Scikit-learn style estimators for searchlight and region-based analyses
+- SPM, NIfTI, and nilearn-compatible data-loading paths
+- Type-safe configuration objects and factorial contrast generation
+- Result objects for NIfTI export, tables, peaks, and visualization
+- Unit tests plus Haxby-dataset integration tests against MATLAB reference
+  behavior
+
 ## What is cvManova?
 
 **cvManova** is a method for multivariate pattern analysis (MVPA) of fMRI data that estimates **pattern distinctness** - a measure of how reliably brain activity patterns can distinguish between experimental conditions.
@@ -393,6 +409,10 @@ Same license as the original MATLAB implementation.
 ## Original Authors
 
 - **Carsten Allefeld** - Algorithm design and MATLAB implementation
+
+## Python Port
+
+- **Johannes Roth** - Python package, modern API, examples, and validation tests
 
 ## Acknowledgments
 
